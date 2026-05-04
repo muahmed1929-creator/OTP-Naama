@@ -11,7 +11,9 @@
     "dev:web": "npm run dev --workspace=apps/web",
     "db:push": "npm run db:push --workspace=packages/db",
     "db:generate": "npm run db:generate --workspace=packages/db",
-    "db:seed": "npm run db:seed --workspace=packages/db"
+    "db:seed": "npm run db:seed --workspace=packages/db",
+    "build": "npm run build --workspace=apps/web",
+    "start": "npm run start --workspace=apps/api"
   },
   "devDependencies": {
     "@prisma/client": "^5.0.0",
