@@ -1,0 +1,13 @@
+node_modules
+.env
+.env.local
+.next
+dist
+build
+.DS_Store
+*.log
+scratch/
+clear_data.bat
+clear_data.ts
+check_otps.ts
+package-lock.json

@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  apiKeys   ApiKey[]
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  name      String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([key])
+}
+
+model Panel {
+  id        String   @id @default(uuid())
+  name      String
+  apiUrl    String
+  apiKey    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  logs      Log[]
+  otps      Otp[]
+}
+
+model Otp {
+  id        String    @id @default(uuid())
+  otpCode   String
+  area      String
+  panelId   String?
+  status    OtpStatus @default(PENDING)
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  updatedAt DateTime  @updatedAt
+  logs      Log[]
+  panel     Panel?    @relation(fields: [panelId], references: [id])
+
+  @@index([createdAt])
+  @@index([area])
+  @@index([panelId])
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  otpId     String
+  panelId   String
+  response  Json?
+  status    String
+  timestamp DateTime @default(now())
+  otp       Otp      @relation(fields: [otpId], references: [id])
+  panel     Panel    @relation(fields: [panelId], references: [id])
+
+  @@index([otpId])
+  @@index([panelId])
+}
+
+enum OtpStatus {
+  PENDING
+  SENT
+  FAILED
+}

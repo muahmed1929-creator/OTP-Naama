@@ -1,0 +1,25 @@
+{
+  "name": "otp-saas",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "db:push": "npm run db:push --workspace=packages/db",
+    "db:generate": "npm run db:generate --workspace=packages/db",
+    "db:seed": "npm run db:seed --workspace=packages/db"
+  },
+  "devDependencies": {
+    "@prisma/client": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "next": "^16.2.4",
+    "prisma": "^5.0.0",
+    "ts-node": "^10.9.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.0.0"
+  }
+}
