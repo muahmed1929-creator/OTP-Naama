@@ -7,7 +7,7 @@ import { User, Mail, Lock, RefreshCw, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = '/api';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');

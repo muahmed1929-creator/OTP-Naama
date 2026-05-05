@@ -18,18 +18,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/otp/share',
-        destination: 'http://localhost:3001/otp/share',
-      },
-      {
-        source: '/otp/shared',
-        destination: 'http://localhost:3001/otp/shared',
-      }
-    ];
-  },
+  serverExternalPackages: ['jsonwebtoken', 'bcrypt'],
   async headers() {
     return [
       {
