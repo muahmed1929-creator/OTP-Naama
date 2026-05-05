@@ -50,6 +50,15 @@ export async function POST(request: Request) {
       user: { id: user.id, email: user.email, name: user.name, role: (user as any).role }
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error('Registration Error Details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code // Prisma error code if applicable
+    });
+    return NextResponse.json({ 
+      error: error.message,
+      details: error.code ? `Prisma Error: ${error.code}` : undefined
+    }, { status: 400 });
   }
 }
