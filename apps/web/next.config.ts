@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
-  serverExternalPackages: ['jsonwebtoken', 'bcrypt'],
+  serverExternalPackages: ['jsonwebtoken'],
   async headers() {
     return [
       {

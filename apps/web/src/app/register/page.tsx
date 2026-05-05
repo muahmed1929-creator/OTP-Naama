@@ -31,9 +31,9 @@ export default function RegisterPage() {
         const apiError = responseData?.message || responseData?.error;
 
         if (!err.response) {
-          setError('Backend API not reachable. Start API with: npm run dev:api');
+          setError('Backend API not reachable. Please check your internet connection.');
         } else {
-          setError(apiError || 'Registration failed');
+          setError(apiError || `Registration failed (Status: ${err.response.status})`);
         }
       } else {
         setError('Registration failed');
