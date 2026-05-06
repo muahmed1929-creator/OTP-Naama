@@ -11,3 +11,6 @@ clear_data.bat
 clear_data.ts
 check_otps.ts
 package-lock.json
+
+.vercel
+.env*.local

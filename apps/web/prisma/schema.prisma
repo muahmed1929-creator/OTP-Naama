@@ -65,6 +65,7 @@ model Otp {
 
 enum OtpStatus {
   PENDING
+  SUCCESS
   SENT
   FAILED
 }

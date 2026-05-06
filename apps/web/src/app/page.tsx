@@ -65,6 +65,7 @@ export default function Dashboard() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'logs' | 'panels' | 'settings'>('dashboard');
+  const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
@@ -85,6 +86,7 @@ export default function Dashboard() {
       return;
     }
 
+    setRefreshing(true);
     try {
       const logsEndpoint = searchQuery ? `/otp/search?q=${encodeURIComponent(searchQuery)}` : '/otp/logs';
       const [statsRes, logsRes] = await Promise.all([
@@ -95,11 +97,11 @@ export default function Dashboard() {
       setLogs(logsRes.data);
     } catch (error: any) {
       if (error.response?.status === 401) handleLogout();
-      // Silently handle network errors — dashboard will retry on next interval
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, [API_URL, handleLogout]);
+  }, [searchQuery, handleLogout]);
 
   useEffect(() => {
     const token = localStorage.getItem('otp_token');
@@ -149,7 +151,8 @@ export default function Dashboard() {
 
       const otpCode = response.data?.data?.otpCode || '000000';
       setGeneratedOtpCode(otpCode);
-      fetchData(); // Refresh stats
+      // Immediately refresh stats and logs so UI updates without logout
+      await fetchData();
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || 'Failed to generate OTP. Please try again.';
       alert(errorMsg);
@@ -393,7 +396,7 @@ export default function Dashboard() {
 
                 {/* Recent Logs Section (Full Width) */}
                 <div className="col-span-12">
-                  <LogTable logs={logs} onViewAll={() => setActiveTab('logs')} onRefresh={fetchData} />
+                  <LogTable logs={logs} onViewAll={() => setActiveTab('logs')} onRefresh={fetchData} refreshing={refreshing} />
                 </div>
               </div>
             )}
@@ -409,7 +412,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="bg-white rounded-card shadow-soft overflow-hidden border border-white/40">
-                  <LogTable logs={logs} onRefresh={fetchData} />
+                  <LogTable logs={logs} onRefresh={fetchData} refreshing={refreshing} />
                 </div>
               </div>
             )}

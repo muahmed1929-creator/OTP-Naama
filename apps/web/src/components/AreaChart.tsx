@@ -13,7 +13,7 @@ export const AreaChart = ({ data }: { data: any[] }) => {
           <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
             <XAxis 
-              dataKey="area" 
+              dataKey="name" 
               stroke="#94a3b8" 
               fontSize={12} 
               tickLine={false} 
@@ -35,7 +35,7 @@ export const AreaChart = ({ data }: { data: any[] }) => {
                 boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' 
               }}
             />
-            <Bar dataKey="_count.id" radius={[10, 10, 10, 10]} barSize={40}>
+            <Bar dataKey="count" radius={[10, 10, 10, 10]} barSize={40}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}

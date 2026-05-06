@@ -1,48 +1,84 @@
 import { prisma } from '../lib/prisma';
 
+const OTPS_PER_NUMBER = 30;
+
 export class OtpService {
+  /**
+   * Generate 30 unique OTPs for a single phone number
+   */
   async generateOtp({ area, panelId }: { area: string; panelId?: string }) {
-    // Generate 6-digit OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes TTL
 
-    // Store directly in PostgreSQL
-    const otp = await prisma.otp.create({
-      data: {
-        otpCode,
-        area,
-        panelId: panelId || null,
-        status: 'PENDING',
-        expiresAt,
-      },
-    });
+    // Generate 30 unique OTP codes for this number
+    const otpCodes = new Set<string>();
+    while (otpCodes.size < OTPS_PER_NUMBER) {
+      otpCodes.add(Math.floor(100000 + Math.random() * 900000).toString());
+    }
 
-    console.log(`✅ OTP ${otpCode} generated for ${area}`);
-    return otp;
-  }
-
-  async generateBulkOtp({ areas, panelId }: { areas: string[]; panelId?: string }) {
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-    const data = areas.map((area) => ({
-      otpCode: Math.floor(100000 + Math.random() * 900000).toString(),
+    const data = Array.from(otpCodes).map((code) => ({
+      otpCode: code,
       area,
       panelId: panelId || null,
-      status: 'PENDING' as any,
+      status: 'SUCCESS' as any,
       expiresAt,
     }));
 
-    // Insert all at once
+    // Insert all 30 OTPs at once
     await prisma.otp.createMany({
       data,
       skipDuplicates: true,
     });
-    
-    console.log(`✅ Generated ${areas.length} OTPs in bulk`);
-    
+
+    console.log(`✅ Generated ${OTPS_PER_NUMBER} OTPs for ${area}`);
+
     return {
       otpCode: data[0].otpCode,
       area: data[0].area,
-      status: data[0].status
+      status: 'SUCCESS',
+      totalGenerated: OTPS_PER_NUMBER,
+    };
+  }
+
+  /**
+   * Generate 30 OTPs per number in bulk mode (multiple numbers)
+   */
+  async generateBulkOtp({ areas, panelId }: { areas: string[]; panelId?: string }) {
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    const allData: any[] = [];
+
+    for (const area of areas) {
+      // Generate 30 unique OTP codes for each number
+      const otpCodes = new Set<string>();
+      while (otpCodes.size < OTPS_PER_NUMBER) {
+        otpCodes.add(Math.floor(100000 + Math.random() * 900000).toString());
+      }
+
+      Array.from(otpCodes).forEach((code) => {
+        allData.push({
+          otpCode: code,
+          area,
+          panelId: panelId || null,
+          status: 'SUCCESS' as any,
+          expiresAt,
+        });
+      });
+    }
+
+    // Insert all at once
+    await prisma.otp.createMany({
+      data: allData,
+      skipDuplicates: true,
+    });
+    
+    console.log(`✅ Generated ${allData.length} OTPs for ${areas.length} numbers (${OTPS_PER_NUMBER} each)`);
+    
+    return {
+      otpCode: allData[0]?.otpCode || '000000',
+      area: allData[0]?.area || '',
+      status: 'SUCCESS',
+      totalGenerated: allData.length,
+      numbersProcessed: areas.length,
     };
   }
 
@@ -71,6 +107,19 @@ export class OtpService {
       })
     ]);
 
+    // Clean up area stats: group by country/region name (strip phone numbers)
+    const areaMap = new Map<string, number>();
+    areaStats.forEach(a => {
+      // Area format: "Pakistan | +923115907063" — extract just the country part
+      const cleanName = a.area.split('|')[0]?.trim() || a.area;
+      areaMap.set(cleanName, (areaMap.get(cleanName) || 0) + a._count.id);
+    });
+
+    const cleanedAreaStats = Array.from(areaMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10); // Top 10 areas for readability
+
     const stats = {
       metrics: {
         total: metrics._count.id,
@@ -80,7 +129,7 @@ export class OtpService {
         weekly,
         monthly,
       },
-      areaStats: areaStats.map(a => ({ name: a.area, count: a._count.id })),
+      areaStats: cleanedAreaStats,
       panelStats: panelData.map(p => ({
         id: p.id,
         name: p.name,
@@ -119,7 +168,7 @@ export class OtpService {
           number: phoneNumber
         },
         panel: otp.panel || { name: 'Direct' },
-        status: otp.logs[0]?.status || otp.status,
+        status: otp.status,
         timestamp: otp.createdAt
       };
     });
@@ -157,11 +206,12 @@ export class OtpService {
           number: phoneNumber
         },
         panel: otp.panel || { name: 'Direct' },
-        status: otp.logs[0]?.status || otp.status,
+        status: otp.status,
         timestamp: otp.createdAt
       };
     });
   }
+
   async getAllOtps() {
     return prisma.otp.findMany({
       orderBy: { createdAt: 'desc' },
